@@ -3,7 +3,8 @@
     "heartbeat": "2026-11-20T19:15:15.189728+00:00"
   },
   "solana:BYKQkHKMWHidNBLQXgt7NX4PLUtJZRYGLWQYkJzPGenX": {
+    "message_id": 3,
     "reserved_at": "2026-11-20T21:10:33.674517+00:00",
-    "status": "reserved"
+    "status": "sent"
   }
 }
