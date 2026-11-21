@@ -29,7 +29,14 @@
     "sent_at": "2026-11-21T19:53:54.479519+00:00",
     "status": "sent",
     "symbol": "HOUSE",
-    "tracking": {}
+    "tracking": {
+      "1h": {
+        "change_pct": -76.62,
+        "liquidity": 32807.93,
+        "observed_after_h": 1.4,
+        "price": 3.172e-05
+      }
+    }
   },
   "solana:8fWsV1u1SYcN358tSA6dyTjfpmaQTziftcHwKBFSpump": {
     "message_id": 7,
