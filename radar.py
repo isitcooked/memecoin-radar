@@ -34,6 +34,17 @@ BASE_OPTIONAL_FLAGS = ("cannot_sell_all", "cannot_buy", "is_proxy", "hidden_owne
 CRITICAL_NAMES = ("mint authority", "mintable", "freeze authority", "honeypot")
 LOG = logging.getLogger("radar")
 
+INTEL_POSTS = (
+    ("LIQUIDITY IS THE EXIT", "High volume means little when liquidity is thin. Compare both before trusting momentum."),
+    ("VERIFY THE CONTRACT", "Names and tickers can be copied. The contract address is the asset's real identity."),
+    ("BUY PRESSURE NEEDS CONTEXT", "More buys than sells can signal momentum, but holder concentration and liquidity still matter."),
+    ("A SCANNER IS A FILTER", "RugCheck and GoPlus reduce obvious risk. They cannot prove that a token or team is safe."),
+    ("FRESH PAIRS ARE FRAGILE", "New markets have little history. Strong numbers can reverse quickly when liquidity is immature."),
+    ("BOOSTED DOES NOT MEAN VERIFIED", "Paid visibility only proves that someone bought attention. It is never a security signal."),
+    ("PROTECT YOUR MAIN WALLET", "Use a separate low-balance wallet for experiments and review old token approvals regularly."),
+    ("THE RECEIPT MATTERS", "A signal is only half the story. Track what happened afterwards — including every loss."),
+)
+
 
 class RadarError(RuntimeError):
     pass
@@ -822,6 +833,33 @@ def maybe_weekly_receipt(history, token, chat, channel, ref):
     return 0
 
 
+def maybe_intel_post(history, token, chat, channel, ref):
+    """Two concise educational posts per week keep the channel useful without spam."""
+    now = datetime.now(timezone.utc)
+    if now.weekday() not in {1, 4} or now.hour < 17:
+        return 0
+    meta = obj(history.get("_meta")); key = now.date().isoformat()
+    if meta.get("last_intel_post") == key:
+        return 0
+    title, body = INTEL_POSTS[now.toordinal() % len(INTEL_POSTS)]
+    footer = "Save this and share it with someone learning on-chain research."
+    if channel:
+        footer = f'Save this and share <a href="https://t.me/{channel}">IS IT COOKED?</a> with your research circle.'
+    text = "\n".join((
+        "👁 <b>RADAR INTEL</b>", "", f"<b>{title}</b>", body, "",
+        f"<i>{footer}</i>", "<i>Education only · Not financial advice.</i>",
+    ))
+    try:
+        send(token, {"chat_id": chat, "text": text, "parse_mode": "HTML",
+                     "link_preview_options": {"is_disabled": True}})
+    except RadarError as error:
+        LOG.warning("Radar Intel post failed: %s", error)
+        return 1
+    meta["last_intel_post"] = key; history["_meta"] = meta
+    save_history(history, ref, f"radar intel {key}")
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=("dry-run", "test", "live"), default="dry-run")
@@ -856,6 +894,7 @@ def main():
     if args.mode == "live":
         background_failures += update_receipts(history, token, chat, channel, ref)
         background_failures += maybe_weekly_receipt(history, token, chat, channel, ref)
+        background_failures += maybe_intel_post(history, token, chat, channel, ref)
     chains = ["solana", "base"] if os.getenv("ENABLE_BASE", "").lower() == "true" else ["solana"]
     candidates, failures = discover(chains, history)
     failures += background_failures
