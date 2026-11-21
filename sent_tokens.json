@@ -41,5 +41,16 @@
     "message_id": 4,
     "reserved_at": "2026-11-20T21:10:38.762105+00:00",
     "status": "sent"
+  },
+  "solana:Jd3NCawdFiDNWpLiTtsMqoeoBMjC1ZQMrMScRVzpump": {
+    "chain": "solana",
+    "initial_liquidity": 58333.91,
+    "initial_price": 0.0006793,
+    "mint": "Jd3NCawdFiDNWpLiTtsMqoeoBMjC1ZQMrMScRVzpump",
+    "pair": "FBqXu5ezPbBv4vKTFD83QPerYGcotcvqzrtAbSXHQs2m",
+    "reserved_at": "2026-11-21T15:54:22.653165+00:00",
+    "score": 62,
+    "status": "reserved",
+    "symbol": "NOHR"
   }
 }
