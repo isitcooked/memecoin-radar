@@ -129,6 +129,9 @@ class Candidate:
     change_1h: float | None
     created_at: float
     logo_url: str = ''
+    website_url: str = ''
+    telegram_url: str = ''
+    x_url: str = ''
 
     @property
     def key(self):
@@ -145,9 +148,9 @@ class Candidate:
         if self.age_minutes >= 60 and 5000 < recent < self.volume_1h:
             multiple = 11 * recent / (self.volume_1h - recent)
             if multiple >= 3:
-                return f"Volumen 5 min ×{min(multiple, 999):.1f} frente al ritmo previo"
+                return f"5m volume ×{min(multiple, 999):.1f} vs previous pace"
         if recent > 5000 and (self.change_5m or 0) >= 8:
-            return f"Precio +{self.change_5m:.1f}% en 5 min"
+            return f"Price +{self.change_5m:.1f}% in 5 minutes"
         return ""
 
     @property
@@ -170,6 +173,41 @@ def token_label(value, default, limit):
     # Quita saltos, controles y marcas de dirección antes de escapar el HTML.
     cleaned = "".join(char for char in value[:256] if char.isprintable()).strip()
     return cleaned[:limit] or default
+
+
+def safe_public_url(value, allowed_hosts=None):
+    """Accept only short HTTPS links suitable for Telegram inline buttons."""
+    if not isinstance(value, str) or len(value) > 500:
+        return ""
+    try:
+        parsed = urlsplit(value.strip())
+    except ValueError:
+        return ""
+    host = (parsed.hostname or "").lower().removeprefix("www.")
+    if parsed.scheme != "https" or not host or parsed.username or parsed.password:
+        return ""
+    if allowed_hosts and host not in allowed_hosts:
+        return ""
+    return value.strip()
+
+
+def official_links(info):
+    """Extract the first official website, Telegram and X links from DexScreener."""
+    info = obj(info)
+    website = ""
+    for item in info.get("websites") if isinstance(info.get("websites"), list) else []:
+        website = safe_public_url(obj(item).get("url"))
+        if website:
+            break
+    telegram = x_url = ""
+    for item in info.get("socials") if isinstance(info.get("socials"), list) else []:
+        item = obj(item)
+        social_type = str(item.get("type") or "").lower()
+        if social_type == "telegram" and not telegram:
+            telegram = safe_public_url(item.get("url"), {"t.me", "telegram.me"})
+        elif social_type in {"twitter", "x"} and not x_url:
+            x_url = safe_public_url(item.get("url"), {"x.com", "twitter.com"})
+    return website, telegram, x_url
 
 
 def qualify(chain, pair, wanted, now_ms):
@@ -200,11 +238,14 @@ def qualify(chain, pair, wanted, now_ms):
     if h1 <= 30_000 and not burst:
         return None
     change = obj(pair.get("priceChange"))
+    info = obj(pair.get("info"))
+    website, telegram, x_url = official_links(info)
     return Candidate(
         chain, mint, pool, token_label(base.get("name"), "Token", 80),
         token_label(base.get("symbol"), "?", 24), liquidity, h1, m5, buys, sells,
         number(pair.get("fdv")), number(pair.get("marketCap")),
-        number(change.get("m5")), number(change.get("h1")), created, obj(pair.get("info")).get("imageUrl") or "",
+        number(change.get("m5")), number(change.get("h1")), created,
+        info.get("imageUrl") or "", website, telegram, x_url,
     )
 
 
@@ -296,43 +337,65 @@ def passes_audit(candidate):
 
 def format_alert(candidate, chat, channel):
     def usd(value):
-        return f"${value:,.0f} USD" if value is not None and value >= 0 else "N/D"
+        return f"${value:,.0f} USD" if value is not None and value >= 0 else "N/A"
 
     def percent(value):
-        return f"{value:+.2f} %" if value is not None else "N/D"
+        return f"{value:+.2f}%" if value is not None else "N/A"
 
     cap = f"FDV {usd(candidate.fdv)}"
     if candidate.market_cap is not None and candidate.market_cap > 0:
-        cap = f"Cap. {usd(candidate.market_cap)} · {cap}"
-    footer = "🔁 Reenvía esta alerta para compartir el radar."
+        cap = f"Market Cap {usd(candidate.market_cap)} · {cap}"
+    footer = "🔁 Forward this alert and help the radar community grow."
     if channel:
-        footer = f'🔁 Comparte <a href="https://t.me/{channel}">el canal</a> con tu comunidad.'
-    headline = "⚡ " + candidate.signal
-    message = "\n".join((
+        footer = f'🔁 Share <a href="https://t.me/{channel}">the channel</a> with your community.'
+    official = []
+    if candidate.telegram_url:
+        official.append(f'<a href="{escape(candidate.telegram_url, quote=True)}">Telegram</a>')
+    if candidate.website_url:
+        official.append(f'<a href="{escape(candidate.website_url, quote=True)}">Website</a>')
+    if candidate.x_url:
+        official.append(f'<a href="{escape(candidate.x_url, quote=True)}">X</a>')
+    official_line = f"🌐 <b>Official:</b> {' · '.join(official)}" if official else ""
+    headline = "⚡ " + (candidate.signal or "BREAKOUT ACTIVITY DETECTED")
+    lines = [
         f"<b>{headline}</b>",
         f"<b>{escape(candidate.name)}</b> · <b>${escape(candidate.symbol)}</b> · {CHAINS[candidate.chain]}",
-        "", "📋 <b>CONTRATO (CA)</b>", f"<pre>{candidate.mint}</pre>",
+        "", "📋 <b>CONTRACT ADDRESS</b>", f"<pre>{candidate.mint}</pre>",
         "",
-        f"🎯 Radar Score  <b>{candidate.score}/100</b> · Edad <b>{candidate.age_minutes:.0f} min</b>",
+        f"🎯 Radar Score  <b>{candidate.score}/100</b> · Age <b>{candidate.age_minutes:.0f} min</b>",
         f"🏷 {cap}",
-        f"💧 Liquidez  <b>{usd(candidate.liquidity)}</b>",
-        f"📈 Volumen 1h  <b>{usd(candidate.volume_1h)}</b> · 5m {usd(candidate.volume_5m)}",
-        f"⚡ Cambio  5m <b>{percent(candidate.change_5m)}</b> · 1h <b>{percent(candidate.change_1h)}</b>",
-        f"🔄 Compras/ventas 1h  <b>{candidate.buys:,.0f} / {candidate.sells:,.0f}</b>",
-        "",
+        f"💧 Liquidity  <b>{usd(candidate.liquidity)}</b>",
+        f"📈 Volume 1h  <b>{usd(candidate.volume_1h)}</b> · 5m {usd(candidate.volume_5m)}",
+        f"⚡ Price Change  5m <b>{percent(candidate.change_5m)}</b> · 1h <b>{percent(candidate.change_1h)}</b>",
+        f"🔄 Buys/Sells 1h  <b>{candidate.buys:,.0f} / {candidate.sells:,.0f}</b>",
+    ]
+    if official_line:
+        lines.extend(("", official_line))
+    lines.extend((
+        "", "<i>Automated signal · Always do your own research.</i>",
         f"<i>{footer}</i>",
     ))
+    message = "\n".join(lines)
     chart = f"https://dexscreener.com/{candidate.chain}/{candidate.pair}"
     if candidate.chain == "solana":
-        trade = ("⚡ Comprar rápido · Photon", f"https://photon-sol.tinyastro.io/en/lp/{candidate.pair}")
-        audit = ("🔍 Auditar · RugCheck", f"https://rugcheck.xyz/tokens/{candidate.mint}")
+        trade = ("⚡ Quick Buy · Photon", f"https://photon-sol.tinyastro.io/en/lp/{candidate.pair}")
+        audit = ("🔍 Security Check · RugCheck", f"https://rugcheck.xyz/tokens/{candidate.mint}")
     else:
-        trade = ("⚡ Comprar rápido · Uniswap",
+        trade = ("⚡ Quick Buy · Uniswap",
                  f"https://app.uniswap.org/swap?chain=base&outputCurrency={candidate.mint}")
-        audit = ("🔍 Auditar · GoPlus", f"https://console.gopluslabs.io/token-security/8453/{candidate.mint}")
-    buttons = [("📊 Ver gráfico", chart), trade, audit]
+        audit = ("🔍 Security Check · GoPlus", f"https://console.gopluslabs.io/token-security/8453/{candidate.mint}")
+    buttons = [("📊 View Chart", chart), trade, audit]
     keyboard = [[{"text": title, "url": url}] for title, url in buttons]
-    keyboard.append([{"text": "📋 Copiar contrato", "copy_text": {"text": candidate.mint}}])
+    social_buttons = []
+    if candidate.telegram_url:
+        social_buttons.append({"text": "💬 Telegram", "url": candidate.telegram_url})
+    if candidate.website_url:
+        social_buttons.append({"text": "🌐 Website", "url": candidate.website_url})
+    if candidate.x_url:
+        social_buttons.append({"text": "𝕏 X", "url": candidate.x_url})
+    if social_buttons:
+        keyboard.append(social_buttons)
+    keyboard.append([{"text": "📋 Copy Contract", "copy_text": {"text": candidate.mint}}])
     return {
         "chat_id": chat, "text": message, "parse_mode": "HTML",
         "link_preview_options": {"is_disabled": True},
@@ -357,7 +420,7 @@ def load_font(size, bold=False):
 
 def compact_usd(value):
     if value is None or value < 0:
-        return "N/D"
+        return "N/A"
     for divisor, suffix in ((1_000_000_000, "B"), (1_000_000, "M"), (1_000, "K")):
         if value >= divisor:
             return f"${value / divisor:.1f}{suffix}"
@@ -494,10 +557,10 @@ def render_card(candidate):
     draw.polygon([(52,331),(1125,331),(1148,354),(1148,429),(75,429),(52,406)],
                  fill=accent)
     draw.line((83,339,216,339),fill="#385022",width=3)
-    label(78,354,candidate.signal or "Actividad del par",38,"#132312",1040,True)
-    for x, title, value in ((52,"VOLUMEN · 5 MIN",compact_usd(candidate.volume_5m)),
-                            (424,"LIQUIDEZ",compact_usd(candidate.liquidity)),
-                            (796,"COMPRAS · 1 H",f"{100*candidate.buys/max(1,candidate.buys+candidate.sells):.0f}%")):
+    label(78,354,candidate.signal or "BREAKOUT ACTIVITY DETECTED",38,"#132312",1040,True)
+    for x, title, value in ((52,"VOLUME · 5 MIN",compact_usd(candidate.volume_5m)),
+                            (424,"LIQUIDITY",compact_usd(candidate.liquidity)),
+                            (796,"BUY PRESSURE · 1 H",f"{100*candidate.buys/max(1,candidate.buys+candidate.sells):.0f}%")):
         tint = accent
         draw.line((x,457,x+51,457),fill=tint,width=4)
         label(x,473,title,22,muted,330,True)
@@ -633,7 +696,7 @@ def main():
     ):
         raise RadarError("Configura TELEGRAM_TOKEN y CHAT_ID con el alias @canal o ID -100…")
     if args.mode == "test":
-        send(token, {"chat_id": chat, "text": "✅ Prueba del Radar de Memecoins. Telegram conectado."})
+        send(token, {"chat_id": chat, "text": "✅ Memecoin Radar test successful. Telegram is connected."})
         LOG.info("Telegram confirmó la publicación de prueba.")
         return 0
 
