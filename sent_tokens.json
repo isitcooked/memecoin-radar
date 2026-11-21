@@ -54,6 +54,13 @@
     "sent_at": "2026-11-21T15:54:25.217039+00:00",
     "status": "sent",
     "symbol": "NOHR",
-    "tracking": {}
+    "tracking": {
+      "1h": {
+        "change_pct": 167.92,
+        "liquidity": 97537.38,
+        "observed_after_h": 1.5,
+        "price": 0.00182
+      }
+    }
   }
 }
