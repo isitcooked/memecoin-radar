@@ -45,6 +45,9 @@ jobs:
       - name: Install verified dependencies
         run: python -m pip install --disable-pip-version-check -r requirements.txt
 
+      - name: Run reliability tests
+        run: python -m unittest -v test_radar.py
+
       - name: Run the radar
         env:
           RUN_MODE: ${{ inputs.mode || 'live' }}
