@@ -345,9 +345,9 @@ def format_alert(candidate, chat, channel):
     cap = f"FDV {usd(candidate.fdv)}"
     if candidate.market_cap is not None and candidate.market_cap > 0:
         cap = f"Market Cap {usd(candidate.market_cap)} · {cap}"
-    footer = "🔁 Forward this alert and help the radar community grow."
+    footer = "🔁 Forward this signal and help the intelligence network grow."
     if channel:
-        footer = f'🔁 Share <a href="https://t.me/{channel}">the channel</a> with your community.'
+        footer = f'🔁 Share <a href="https://t.me/{channel}">IS IT COOKED?</a> with your community.'
     official = []
     if candidate.telegram_url:
         official.append(f'<a href="{escape(candidate.telegram_url, quote=True)}">Telegram</a>')
@@ -372,7 +372,7 @@ def format_alert(candidate, chat, channel):
     if official_line:
         lines.extend(("", official_line))
     lines.extend((
-        "", "<i>Automated signal · Always do your own research.</i>",
+        "", "<i>Signal before noise · Always do your own research.</i>",
         f"<i>{footer}</i>",
     ))
     message = "\n".join(lines)
@@ -519,7 +519,7 @@ def render_card(candidate):
 
     draw.ellipse((53,39,75,61),outline=accent,width=2)
     draw.ellipse((60,46,68,54),fill=accent)
-    label(92, 30, "MEMECOIN RADAR", 28, accent, 650, True)
+    label(92, 30, "IS IT COOKED?  /  RADAR", 28, accent, 650, True)
     stamp = datetime.now(timezone.utc).strftime("%d.%m.%Y   %H:%M UTC")
     label(838, 33, stamp, 22, muted, 315)
     draw.line((52,87,1148,87), fill="#334451", width=2)
@@ -566,7 +566,7 @@ def render_card(candidate):
         label(x,473,title,22,muted,330,True)
         label(x,505,value,61,paper,330,True)
     draw.line((52,602,1148,602),fill="#334451",width=2)
-    label(52,622,"DexScreener   /   "+network,22,muted,550)
+    label(52,622,"SIGNAL BEFORE NOISE   /   "+network,22,muted,700)
     label(875,622,f"Momentum   {candidate.score}/100",22,accent,280,True)
     output = BytesIO()
     image.save(output, format="PNG")
