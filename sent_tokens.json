@@ -28,8 +28,9 @@
     "status": "sent"
   },
   "solana:FJKt1LxbWBpTRt9BaDEB6Wr2qL5LZzjFF5sx8rXnpump": {
+    "message_id": 9,
     "reserved_at": "2026-11-21T06:40:27.072974+00:00",
-    "status": "reserved"
+    "status": "sent"
   },
   "solana:GUtHGr6xcn9e78ew6qY7Jg7foyuAhf67mNBNntn5pump": {
     "message_id": 4,
