@@ -46,11 +46,14 @@
     "chain": "solana",
     "initial_liquidity": 58333.91,
     "initial_price": 0.0006793,
+    "message_id": 16,
     "mint": "Jd3NCawdFiDNWpLiTtsMqoeoBMjC1ZQMrMScRVzpump",
     "pair": "FBqXu5ezPbBv4vKTFD83QPerYGcotcvqzrtAbSXHQs2m",
     "reserved_at": "2026-11-21T15:54:22.653165+00:00",
     "score": 62,
-    "status": "reserved",
-    "symbol": "NOHR"
+    "sent_at": "2026-11-21T15:54:25.217039+00:00",
+    "status": "sent",
+    "symbol": "NOHR",
+    "tracking": {}
   }
 }
