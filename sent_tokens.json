@@ -3,8 +3,9 @@
     "heartbeat": "2026-11-20T19:15:15.189728+00:00"
   },
   "solana:2GiS8L6jzveE7cQ61bjGN6wVn5MS9FcBjarSAMFppump": {
+    "message_id": 10,
     "reserved_at": "2026-11-21T09:36:38.313596+00:00",
-    "status": "reserved"
+    "status": "sent"
   },
   "solana:2S4e8Lv5kMqzXumeWrXMMwANUVtFLazeezUorfG9pump": {
     "message_id": 6,
