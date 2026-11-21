@@ -8,8 +8,9 @@
     "status": "sent"
   },
   "solana:DkHsZ1kjd2Fua8sgKE6PhHhyCdXYscbDVN7mAfiGpump": {
+    "message_id": 5,
     "reserved_at": "2026-11-21T00:30:18.141070+00:00",
-    "status": "reserved"
+    "status": "sent"
   },
   "solana:GUtHGr6xcn9e78ew6qY7Jg7foyuAhf67mNBNntn5pump": {
     "message_id": 4,
