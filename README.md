@@ -36,3 +36,7 @@ El cron usa el modo `live` cada cinco minutos. Las ejecuciones se serializan y e
 `sent_tokens.json` contiene tokens reservados o enviados. Una entrada `reserved` aparece cuando el historial se guardó antes de contactar con Telegram. Si una publicación queda con resultado incierto, la reserva permanece para impedir un posible duplicado.
 
 GitHub puede retrasar ejecuciones programadas y desactivar cron en repositorios públicos sin actividad prolongada. Las APIs y sus condiciones también pueden cambiar. Conviene revisar la pestaña Actions periódicamente.
+
+## Public accountability
+
+Every confirmed signal stores its original price and liquidity. The radar observes the market again at approximately 1 hour, 6 hours and 24 hours, then publishes a `THE RECEIPT` update after 24 hours. On Sundays it publishes a seven-day scorecard when at least three outcomes are available. Positive and negative results remain in the same public record.
