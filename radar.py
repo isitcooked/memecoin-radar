@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import statistics
 import time
 import requests
 from PIL import Image, ImageChops, ImageDraw, ImageFont, ImageOps, ImageFilter
@@ -132,6 +133,7 @@ class Candidate:
     website_url: str = ''
     telegram_url: str = ''
     x_url: str = ''
+    price_usd: float | None = None
 
     @property
     def key(self):
@@ -245,7 +247,7 @@ def qualify(chain, pair, wanted, now_ms):
         token_label(base.get("symbol"), "?", 24), liquidity, h1, m5, buys, sells,
         number(pair.get("fdv")), number(pair.get("marketCap")),
         number(change.get("m5")), number(change.get("h1")), created,
-        info.get("imageUrl") or "", website, telegram, x_url,
+        info.get("imageUrl") or "", website, telegram, x_url, number(pair.get("priceUsd")),
     )
 
 
@@ -657,12 +659,19 @@ def maintain_heartbeat(history, ref):
         previous = None
     if previous is not None and previous.tzinfo is not None and (now - previous).days < 14:
         return
-    history["_meta"] = {"heartbeat": now.isoformat()}
+    meta = obj(history.get("_meta"))
+    meta["heartbeat"] = now.isoformat()
+    history["_meta"] = meta
     save_history(history, ref, "mantenimiento quincenal")
 
 
 def publish(candidate, payload, card, token, history, ref):
-    entry = {"status": "reserved", "reserved_at": datetime.now(timezone.utc).isoformat()}
+    entry = {
+        "status": "reserved", "reserved_at": datetime.now(timezone.utc).isoformat(),
+        "chain": candidate.chain, "mint": candidate.mint, "pair": candidate.pair,
+        "symbol": candidate.symbol, "score": candidate.score,
+        "initial_price": candidate.price_usd, "initial_liquidity": candidate.liquidity,
+    }
     history[candidate.key] = entry
     # Persiste antes del POST. Un fallo posterior deja esta clave reservada.
     save_history(history, ref, f"reservar {candidate.key}")
@@ -674,8 +683,143 @@ def publish(candidate, payload, card, token, history, ref):
         raise
     except RadarError as error:
         raise RadarError(f"{candidate.key} sigue reservado. {error}") from None
-    entry.update(status="sent", message_id=message_id)
+    entry.update(status="sent", message_id=message_id, sent_at=datetime.now(timezone.utc).isoformat(), tracking={})
     save_history(history, ref, f"confirmar {candidate.key}")
+
+
+def current_market(entry):
+    chain, mint = entry.get("chain"), entry.get("mint")
+    if chain not in CHAINS or not isinstance(mint, str):
+        return None
+    rows = request_json("DexScreener", f"{DEX}/latest/dex/tokens/{mint}")
+    pairs = rows.get("pairs") if isinstance(rows, dict) else None
+    if not isinstance(pairs, list):
+        raise RadarError("DexScreener: invalid tracking response")
+    same_chain = [obj(pair) for pair in pairs if obj(pair).get("chainId") == chain]
+    preferred = next((pair for pair in same_chain if pair.get("pairAddress") == entry.get("pair")), None)
+    if preferred is None and same_chain:
+        preferred = max(same_chain, key=lambda pair: number(obj(pair.get("liquidity")).get("usd")) or 0)
+    if preferred is None:
+        return {"price": None, "liquidity": 0}
+    return {"price": number(preferred.get("priceUsd")),
+            "liquidity": number(obj(preferred.get("liquidity")).get("usd")) or 0}
+
+
+def receipt_payload(entry, checkpoint, chat, channel):
+    initial, current = number(entry.get("initial_price")), number(checkpoint.get("price"))
+    change = checkpoint.get("change_pct")
+    symbol = escape(str(entry.get("symbol") or "TOKEN")[:24])
+    network = CHAINS.get(entry.get("chain"), str(entry.get("chain") or ""))
+    if initial and current and isinstance(change, (int, float)):
+        result = (f"Signal price  <b>${initial:.8g}</b> → <b>${current:.8g}</b>\n"
+                  f"24h change  <b>{change:+.1f}%</b>")
+    else:
+        result = "Current market data is unavailable. Liquidity may have disappeared."
+    footer = "Every signal stays in the record — wins and losses."
+    if channel:
+        footer = f'Every signal stays in <a href="https://t.me/{channel}">the public record</a>.'
+    text = "\n".join((
+        "🧾 <b>THE RECEIPT · 24H UPDATE</b>",
+        f"<b>${symbol}</b> · {network}", "", result,
+        f"Liquidity now  <b>{compact_usd(checkpoint.get('liquidity'))}</b>",
+        f"Original Radar Score  <b>{entry.get('score', 'N/A')}/100</b>", "",
+        f"<i>{footer}</i>", "<i>Tracked outcome · Not financial advice.</i>",
+    ))
+    chart = f"https://dexscreener.com/{entry.get('chain')}/{entry.get('pair')}"
+    return {"chat_id": chat, "text": text, "parse_mode": "HTML",
+            "link_preview_options": {"is_disabled": True},
+            "reply_markup": {"inline_keyboard": [[{"text": "📊 View Current Chart", "url": chart}]]}}
+
+
+def update_receipts(history, token, chat, channel, ref):
+    """Track ~1h/~6h/~24h outcomes and publish one transparent 24h receipt."""
+    now, failures = datetime.now(timezone.utc), 0
+    for key, entry in list(history.items()):
+        if key == "_meta" or not isinstance(entry, dict) or entry.get("status") != "sent":
+            continue
+        initial = number(entry.get("initial_price"))
+        sent_at = entry.get("sent_at")
+        if not initial or not isinstance(sent_at, str):
+            continue
+        try:
+            sent = datetime.fromisoformat(sent_at)
+        except ValueError:
+            continue
+        elapsed = (now - sent).total_seconds() / 3600
+        tracking = obj(entry.get("tracking"))
+        due = [("1h", 1), ("6h", 6), ("24h", 24)]
+        missing = [(label, hours) for label, hours in due if elapsed >= hours and label not in tracking]
+        if not missing:
+            continue
+        try:
+            market = current_market(entry)
+        except RadarError as error:
+            LOG.warning("Receipt tracking skipped for %s: %s", key, error)
+            failures += 1
+            continue
+        price = market["price"] if market else None
+        change = round((price / initial - 1) * 100, 2) if price else None
+        for label, _ in missing:
+            tracking[label] = {"price": price, "liquidity": market.get("liquidity", 0),
+                               "change_pct": change, "observed_after_h": round(elapsed, 1)}
+        entry["tracking"] = tracking
+        publish_24h = any(label == "24h" for label, _ in missing) and not entry.get("receipt_message_id")
+        save_history(history, ref, f"track {key} at {','.join(label for label, _ in missing)}")
+        if publish_24h:
+            try:
+                entry["receipt_message_id"] = send(token, receipt_payload(entry, tracking["24h"], chat, channel))
+                save_history(history, ref, f"confirm receipt {key}")
+            except RadarError as error:
+                LOG.warning("24h receipt for %s was not confirmed: %s", key, error)
+                failures += 1
+    return failures
+
+
+def maybe_weekly_receipt(history, token, chat, channel, ref):
+    now = datetime.now(timezone.utc)
+    if now.weekday() != 6 or now.hour < 18:
+        return 0
+    meta = obj(history.get("_meta")); week = now.strftime("%G-W%V")
+    if meta.get("weekly_receipt") == week:
+        return 0
+    rows = []
+    for entry in history.values():
+        if not isinstance(entry, dict):
+            continue
+        try:
+            sent = datetime.fromisoformat(entry.get("sent_at", ""))
+        except (TypeError, ValueError):
+            continue
+        if (now - sent).total_seconds() > 7 * 86400:
+            continue
+        point = obj(obj(entry.get("tracking")).get("24h"))
+        change = point.get("change_pct")
+        if isinstance(change, (int, float)):
+            rows.append((str(entry.get("symbol") or "TOKEN"), float(change)))
+    rows = rows[-20:]
+    if len(rows) < 3:
+        return 0
+    changes = [change for _, change in rows]; positives = sum(change > 0 for change in changes)
+    best = max(rows, key=lambda row: row[1]); worst = min(rows, key=lambda row: row[1])
+    text = "\n".join((
+        "🧾 <b>THE RECEIPT · WEEKLY SCORECARD</b>", "",
+        f"Signals tracked  <b>{len(rows)}</b>",
+        f"Positive at ~24h  <b>{positives}/{len(rows)}</b>",
+        f"Median result  <b>{statistics.median(changes):+.1f}%</b>",
+        f"Best  <b>${escape(best[0])} {best[1]:+.1f}%</b>",
+        f"Worst  <b>${escape(worst[0])} {worst[1]:+.1f}%</b>", "",
+        "<i>No deleted losses. No cherry-picking. Past performance is not a guarantee.</i>",
+    ))
+    payload = {"chat_id": chat, "text": text, "parse_mode": "HTML",
+               "link_preview_options": {"is_disabled": True}}
+    try:
+        send(token, payload)
+    except RadarError as error:
+        LOG.warning("Weekly receipt failed: %s", error)
+        return 1
+    meta["weekly_receipt"] = week; history["_meta"] = meta
+    save_history(history, ref, f"weekly receipt {week}")
+    return 0
 
 
 def main():
@@ -708,8 +852,13 @@ def main():
         git("check-ref-format", ref)
 
     history = read_history()
+    background_failures = 0
+    if args.mode == "live":
+        background_failures += update_receipts(history, token, chat, channel, ref)
+        background_failures += maybe_weekly_receipt(history, token, chat, channel, ref)
     chains = ["solana", "base"] if os.getenv("ENABLE_BASE", "").lower() == "true" else ["solana"]
     candidates, failures = discover(chains, history)
+    failures += background_failures
     posted = audited = 0
     for candidate in candidates[:MAX_AUDITS]:
         if posted >= MAX_ALERTS:
