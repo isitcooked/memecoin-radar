@@ -169,6 +169,12 @@
         "observed_after_h": 1.5,
         "price": 0.00182
       },
+      "24h": {
+        "change_pct": 214.59,
+        "liquidity": 106392.54,
+        "observed_after_h": 24.4,
+        "price": 0.002137
+      },
       "6h": {
         "change_pct": 184.7,
         "liquidity": 100557.54,
