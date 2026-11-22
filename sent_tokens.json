@@ -108,6 +108,17 @@
     "reserved_at": "2026-11-20T21:10:33.674517+00:00",
     "status": "sent"
   },
+  "solana:BzPyyYCTmQNq2BcfQ4ANAvCYk54rnmQEXMFvFT8RhWMi": {
+    "chain": "solana",
+    "initial_liquidity": 98945.74,
+    "initial_price": 0.0003222,
+    "mint": "BzPyyYCTmQNq2BcfQ4ANAvCYk54rnmQEXMFvFT8RhWMi",
+    "pair": "9pqo6WVjKvYNnRgvPVaoTe1zZvnhtB248ChKnUmKfHH4",
+    "reserved_at": "2026-11-22T17:52:13.837203+00:00",
+    "score": 62,
+    "status": "reserved",
+    "symbol": "MCAT"
+  },
   "solana:CbHNSZB6JzAxfWpamKvZReouucF2PTZGXitcfda6pump": {
     "chain": "solana",
     "initial_liquidity": 12470.13,
