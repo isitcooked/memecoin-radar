@@ -21,12 +21,15 @@
     "chain": "solana",
     "initial_liquidity": 61792.85,
     "initial_price": 0.0007745,
+    "message_id": 25,
     "mint": "3BcJ4SSCfbxDMrWcUDucyCWxMjmy4M2ECCtvxu86pump",
     "pair": "DXVpx5PnefCiLVMucmUxrX2x7MgSDMTggmQgiRA2zV6W",
     "reserved_at": "2026-11-22T22:02:04.054356+00:00",
     "score": 76,
-    "status": "reserved",
-    "symbol": "FSDV15"
+    "sent_at": "2026-11-22T22:02:06.129083+00:00",
+    "status": "sent",
+    "symbol": "FSDV15",
+    "tracking": {}
   },
   "solana:4Kfos2jUqUxwbDqNAJL16B4C99tdtaMSWZS5XmuSZr6Z": {
     "chain": "solana",
