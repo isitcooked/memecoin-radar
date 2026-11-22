@@ -177,12 +177,15 @@
     "chain": "solana",
     "initial_liquidity": 59161.1,
     "initial_price": 0.0006266,
+    "message_id": 24,
     "mint": "FuKY3dk7QmpbDdQRjzbjB3G6PiCuqKNvN4dAWDpwpump",
     "pair": "4X1SAtTgzqfyRDu237HxJLtSfTosMHe9EuXNPvRfFbjc",
     "reserved_at": "2026-11-22T20:24:02.611618+00:00",
     "score": 60,
-    "status": "reserved",
-    "symbol": "OpenIndex"
+    "sent_at": "2026-11-22T20:24:05.153706+00:00",
+    "status": "sent",
+    "symbol": "OpenIndex",
+    "tracking": {}
   },
   "solana:GUtHGr6xcn9e78ew6qY7Jg7foyuAhf67mNBNntn5pump": {
     "message_id": 4,
