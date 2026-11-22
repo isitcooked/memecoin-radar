@@ -76,7 +76,14 @@
     "sent_at": "2026-11-22T00:08:44.012684+00:00",
     "status": "sent",
     "symbol": "time",
-    "tracking": {}
+    "tracking": {
+      "1h": {
+        "change_pct": 40.22,
+        "liquidity": 26027.59,
+        "observed_after_h": 1.2,
+        "price": 0.0001245
+      }
+    }
   },
   "solana:BYKQkHKMWHidNBLQXgt7NX4PLUtJZRYGLWQYkJzPGenX": {
     "message_id": 3,
