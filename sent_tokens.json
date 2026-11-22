@@ -29,7 +29,14 @@
     "sent_at": "2026-11-22T22:02:06.129083+00:00",
     "status": "sent",
     "symbol": "FSDV15",
-    "tracking": {}
+    "tracking": {
+      "1h": {
+        "change_pct": 181.99,
+        "liquidity": 107005.74,
+        "observed_after_h": 1.5,
+        "price": 0.002184
+      }
+    }
   },
   "solana:4Kfos2jUqUxwbDqNAJL16B4C99tdtaMSWZS5XmuSZr6Z": {
     "chain": "solana",
