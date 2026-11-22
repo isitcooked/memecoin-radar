@@ -120,7 +120,14 @@
     "sent_at": "2026-11-22T17:52:16.557340+00:00",
     "status": "sent",
     "symbol": "MCAT",
-    "tracking": {}
+    "tracking": {
+      "1h": {
+        "change_pct": -14.34,
+        "liquidity": 94418.94,
+        "observed_after_h": 1.6,
+        "price": 0.000276
+      }
+    }
   },
   "solana:CbHNSZB6JzAxfWpamKvZReouucF2PTZGXitcfda6pump": {
     "chain": "solana",
