@@ -50,7 +50,14 @@
     "sent_at": "2026-11-22T00:08:39.334559+00:00",
     "status": "sent",
     "symbol": "C@T",
-    "tracking": {}
+    "tracking": {
+      "1h": {
+        "change_pct": -99.47,
+        "liquidity": 1396.6,
+        "observed_after_h": 1.2,
+        "price": 1.329e-06
+      }
+    }
   },
   "solana:8fWsV1u1SYcN358tSA6dyTjfpmaQTziftcHwKBFSpump": {
     "message_id": 7,
