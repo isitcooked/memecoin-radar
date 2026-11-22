@@ -185,7 +185,14 @@
     "sent_at": "2026-11-22T20:24:05.153706+00:00",
     "status": "sent",
     "symbol": "OpenIndex",
-    "tracking": {}
+    "tracking": {
+      "1h": {
+        "change_pct": -26.41,
+        "liquidity": 51509.3,
+        "observed_after_h": 1.6,
+        "price": 0.0004611
+      }
+    }
   },
   "solana:GUtHGr6xcn9e78ew6qY7Jg7foyuAhf67mNBNntn5pump": {
     "message_id": 4,
