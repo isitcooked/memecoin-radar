@@ -201,7 +201,14 @@
     "sent_at": "2026-11-22T22:02:10.430596+00:00",
     "status": "sent",
     "symbol": "MINELIUS",
-    "tracking": {}
+    "tracking": {
+      "1h": {
+        "change_pct": 101.43,
+        "liquidity": 198627.93,
+        "observed_after_h": 1.4,
+        "price": 0.007171
+      }
+    }
   },
   "solana:FJKt1LxbWBpTRt9BaDEB6Wr2qL5LZzjFF5sx8rXnpump": {
     "message_id": 9,
