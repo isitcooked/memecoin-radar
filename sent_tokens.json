@@ -182,6 +182,17 @@
     "reserved_at": "2026-11-21T00:30:18.141070+00:00",
     "status": "sent"
   },
+  "solana:E9rWKjVhHMxQkxfREr7Li8Yy46rVcWiWHoKVQAe9pump": {
+    "chain": "solana",
+    "initial_liquidity": 137349.82,
+    "initial_price": 0.00356,
+    "mint": "E9rWKjVhHMxQkxfREr7Li8Yy46rVcWiWHoKVQAe9pump",
+    "pair": "7yJDP2VmgazVEa6usbXM61uSk5AT3J4dZFaJQvq2LnfZ",
+    "reserved_at": "2026-11-22T22:02:08.076119+00:00",
+    "score": 64,
+    "status": "reserved",
+    "symbol": "MINELIUS"
+  },
   "solana:FJKt1LxbWBpTRt9BaDEB6Wr2qL5LZzjFF5sx8rXnpump": {
     "message_id": 9,
     "reserved_at": "2026-11-21T06:40:27.072974+00:00",
