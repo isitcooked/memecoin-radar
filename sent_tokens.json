@@ -17,6 +17,17 @@
     "reserved_at": "2026-11-21T05:37:26.126506+00:00",
     "status": "sent"
   },
+  "solana:3BcJ4SSCfbxDMrWcUDucyCWxMjmy4M2ECCtvxu86pump": {
+    "chain": "solana",
+    "initial_liquidity": 61792.85,
+    "initial_price": 0.0007745,
+    "mint": "3BcJ4SSCfbxDMrWcUDucyCWxMjmy4M2ECCtvxu86pump",
+    "pair": "DXVpx5PnefCiLVMucmUxrX2x7MgSDMTggmQgiRA2zV6W",
+    "reserved_at": "2026-11-22T22:02:04.054356+00:00",
+    "score": 76,
+    "status": "reserved",
+    "symbol": "FSDV15"
+  },
   "solana:4Kfos2jUqUxwbDqNAJL16B4C99tdtaMSWZS5XmuSZr6Z": {
     "chain": "solana",
     "initial_liquidity": 69535.78,
