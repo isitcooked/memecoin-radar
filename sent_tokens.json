@@ -295,6 +295,7 @@
     "message_id": 24,
     "mint": "FuKY3dk7QmpbDdQRjzbjB3G6PiCuqKNvN4dAWDpwpump",
     "pair": "4X1SAtTgzqfyRDu237HxJLtSfTosMHe9EuXNPvRfFbjc",
+    "receipt_message_id": 33,
     "reserved_at": "2026-11-22T20:24:02.611618+00:00",
     "score": 60,
     "sent_at": "2026-11-22T20:24:05.153706+00:00",
