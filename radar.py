@@ -23,9 +23,15 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 DEX = "https://api.dexscreener.com"
 STATE = Path(__file__).resolve().with_name("sent_tokens.json")
 CHAINS = {"solana": "Solana", "base": "Base"}
-MAX_ALERTS = 3
+MAX_ALERTS = 1
 MAX_AUDITS = 12
-MIN_SCORE = 60
+MIN_SCORE = 75
+MIN_LIQUIDITY = 50_000
+MIN_VOLUME_1H = 50_000
+MIN_TXNS_1H = 100
+MIN_BUY_RATIO = 0.58
+MIN_AGE_MS = 20 * 60_000
+MAX_TURNOVER = 8.0
 BASE_FLAGS = (
     "is_honeypot", "is_blacklisted", "transfer_pausable",
     "owner_change_balance", "can_take_back_ownership", "is_mintable",
@@ -231,7 +237,7 @@ def qualify(chain, pair, wanted, now_ms):
     created = number(pair.get("pairCreatedAt"))
     if pair.get("chainId") != chain or mint not in wanted or not pool or created is None:
         return None
-    if not 300_000 <= now_ms - created <= 86_400_000:
+    if not MIN_AGE_MS <= now_ms - created <= 86_400_000:
         return None
 
     liquidity = number(obj(pair.get("liquidity")).get("usd"))
@@ -239,25 +245,37 @@ def qualify(chain, pair, wanted, now_ms):
     h1, m5 = number(volume.get("h1")), number(volume.get("m5"))
     tx = obj(obj(pair.get("txns")).get("h1"))
     buys, sells = number(tx.get("buys")), number(tx.get("sells"))
-    if liquidity is None or liquidity <= 10_000 or h1 is None or h1 < 0:
+    if liquidity is None or liquidity < MIN_LIQUIDITY or h1 is None or h1 < MIN_VOLUME_1H:
         return None
     if buys is None or sells is None or not (buys.is_integer() and sells.is_integer()):
         return None
-    if not buys > sells >= 0:
+    total_txns = buys + sells
+    buy_ratio = buys / max(1, total_txns)
+    if not buys > sells >= 0 or total_txns < MIN_TXNS_1H or buy_ratio < MIN_BUY_RATIO:
+        return None
+
+    turnover = h1 / liquidity
+    if turnover < 0.50 or turnover > MAX_TURNOVER:
         return None
 
     # h1 incluye los últimos 5 min. Los 55 min anteriores equivalen a 11 ventanas.
     burst = m5 is not None and 5_000 < m5 <= h1 and m5 >= 2 * ((h1 - m5) / 11)
-    if h1 <= 30_000 and not burst:
-        return None
     change = obj(pair.get("priceChange"))
+    change_5m, change_1h = number(change.get("m5")), number(change.get("h1"))
+    # A short bounce inside a falling hour is not breakout momentum.
+    if change_1h is None or not 8 <= change_1h <= 100:
+        return None
+    if change_5m is not None and change_5m < -2:
+        return None
     info = obj(pair.get("info"))
     website, telegram, x_url = official_links(info)
+    if not website or not (telegram or x_url):
+        return None
     return Candidate(
         chain, mint, pool, token_label(base.get("name"), "Token", 80),
         token_label(base.get("symbol"), "?", 24), liquidity, h1, m5, buys, sells,
         number(pair.get("fdv")), number(pair.get("marketCap")),
-        number(change.get("m5")), number(change.get("h1")), created,
+        change_5m, change_1h, created,
         info.get("imageUrl") or "", website, telegram, x_url, number(pair.get("priceUsd")),
     )
 
@@ -334,6 +352,11 @@ def passes_audit(candidate):
                 term in name.lower() for term in CRITICAL_NAMES
             ):
                 return False
+        locked = number(report.get("lpLockedPct"))
+        if locked is None:
+            raise RadarError("RugCheck: falta porcentaje de LP bloqueada")
+        if locked < 80:
+            return False
         return True
 
     query = f"https://api.gopluslabs.io/api/v1/token_security/8453?contract_addresses={mint}"
