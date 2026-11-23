@@ -307,6 +307,13 @@
     "sent_at": "2026-11-22T22:48:17.702654+00:00",
     "status": "sent",
     "symbol": "BTC",
-    "tracking": {}
+    "tracking": {
+      "1h": {
+        "change_pct": -98.6,
+        "liquidity": 1479.36,
+        "observed_after_h": 1.5,
+        "price": 1.418e-06
+      }
+    }
   }
 }
