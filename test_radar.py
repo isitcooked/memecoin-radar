@@ -11,11 +11,24 @@ class ReceiptTests(unittest.TestCase):
         mint, pair = "A" * 32, "B" * 32
         row = {"chainId":"solana", "baseToken":{"address":mint,"name":"Token","symbol":"TOK"},
                "pairAddress":pair, "pairCreatedAt":now-3_600_000, "priceUsd":"0.0125",
-               "liquidity":{"usd":50000}, "volume":{"h1":80000,"m5":12000},
-               "txns":{"h1":{"buys":100,"sells":50}}, "priceChange":{"h1":20,"m5":4}}
+               "liquidity":{"usd":80000}, "volume":{"h1":80000,"m5":12000},
+               "txns":{"h1":{"buys":100,"sells":50}}, "priceChange":{"h1":20,"m5":4},
+               "info":{"websites":[{"url":"https://example.com"}],
+                       "socials":[{"type":"twitter","url":"https://x.com/example"}]}}
         candidate = radar.qualify("solana", row, {mint}, now)
         self.assertIsNotNone(candidate)
         self.assertEqual(candidate.price_usd, 0.0125)
+
+    def test_negative_hour_rejects_short_bounce(self):
+        now = 1_800_000_000_000
+        mint, pair = "A" * 32, "B" * 32
+        row = {"chainId":"solana", "baseToken":{"address":mint,"name":"Token","symbol":"TOK"},
+               "pairAddress":pair, "pairCreatedAt":now-3_600_000, "priceUsd":"0.0125",
+               "liquidity":{"usd":80000}, "volume":{"h1":90000,"m5":15000},
+               "txns":{"h1":{"buys":120,"sells":50}}, "priceChange":{"h1":-5,"m5":12},
+               "info":{"websites":[{"url":"https://example.com"}],
+                       "socials":[{"type":"twitter","url":"https://x.com/example"}]}}
+        self.assertIsNone(radar.qualify("solana", row, {mint}, now))
 
     def test_24h_receipt_tracks_and_publishes_once(self):
         sent_at = (datetime.now(timezone.utc)-timedelta(hours=25)).isoformat()
