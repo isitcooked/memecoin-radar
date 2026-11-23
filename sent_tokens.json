@@ -111,6 +111,17 @@
     "reserved_at": "2026-11-21T04:36:31.570180+00:00",
     "status": "sent"
   },
+  "solana:ADs7gnpeYvkBLthYhqRcrVTeGSFQuqfYnv3PbS6Bpump": {
+    "chain": "solana",
+    "initial_liquidity": 28583.47,
+    "initial_price": 0.0001698,
+    "mint": "ADs7gnpeYvkBLthYhqRcrVTeGSFQuqfYnv3PbS6Bpump",
+    "pair": "2YhArf6uVwnaLaMYLKhDmwe77sh6UaXitQSqeUY44oTf",
+    "reserved_at": "2026-11-23T00:19:31.389889+00:00",
+    "score": 71,
+    "status": "reserved",
+    "symbol": "XMAS"
+  },
   "solana:Ak8pAMMeiqbu3tyE2MU33o8W2RfhLk1hXYsscnFkpump": {
     "chain": "solana",
     "initial_liquidity": 20519.69,
