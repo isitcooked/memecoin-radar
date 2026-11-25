@@ -537,9 +537,9 @@ def render_card(candidate):
     image = sky.resize((1200,675), Image.Resampling.BICUBIC)
     draw = ImageDraw.Draw(image)
     rng = random.Random(813)
-    for i in range(1350):
+    for i in range(620):
         x,y = rng.randrange(1200),rng.randrange(675)
-        brightness = rng.randrange(45,185)
+        brightness = rng.randrange(35,115)
         star = (brightness,brightness,min(255,brightness+30))
         draw.point((x,y),fill=star)
         if i % 59 == 0:
