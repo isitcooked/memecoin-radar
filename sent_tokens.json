@@ -210,7 +210,14 @@
     "sent_at": "2026-11-26T17:41:43.686250+00:00",
     "status": "sent",
     "symbol": "UHI",
-    "tracking": {}
+    "tracking": {
+      "1h": {
+        "change_pct": -99.91,
+        "liquidity": 1673.34,
+        "observed_after_h": 2.1,
+        "price": 1.525e-06
+      }
+    }
   },
   "solana:BzPyyYCTmQNq2BcfQ4ANAvCYk54rnmQEXMFvFT8RhWMi": {
     "chain": "solana",
