@@ -198,6 +198,17 @@
     "reserved_at": "2026-11-20T21:10:33.674517+00:00",
     "status": "sent"
   },
+  "solana:Bnw5JRPek5JvJhzUiB9yrs2cmzt4bLeFqSRzDzSppump": {
+    "chain": "solana",
+    "initial_liquidity": 95874.55,
+    "initial_price": 0.00171,
+    "mint": "Bnw5JRPek5JvJhzUiB9yrs2cmzt4bLeFqSRzDzSppump",
+    "pair": "G9XGQAgycGF5QKkjVC4bVtLtAosV4KR2tAymChFWFsTL",
+    "reserved_at": "2026-11-26T17:41:41.508842+00:00",
+    "score": 75,
+    "status": "reserved",
+    "symbol": "UHI"
+  },
   "solana:BzPyyYCTmQNq2BcfQ4ANAvCYk54rnmQEXMFvFT8RhWMi": {
     "chain": "solana",
     "initial_liquidity": 98945.74,
